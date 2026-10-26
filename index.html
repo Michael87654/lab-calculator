@@ -1,0 +1,2649 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <!-- PWA BEGIN: подключение манифеста и цвет браузерной панели. -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#087f77">
+    <!-- PWA END: подключение манифеста. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="description" content="Лабораторный формульный калькулятор. Офлайн-таблица с фиксацией промежуточных результатов.">
+    <title>
+      Лабораторный формульный калькулятор
+    </title>
+    <style>
+    :root {
+      --bg: #f4f6f8;
+      --paper: #fff;
+      --ink: #192d3b;
+      --muted: #71818e;
+      --line: #e3e9ed;
+      --teal: #087f77;
+      --teal-dark: #086660;
+      --teal-pale: #eef8f6;
+      --amber: #965d08;
+      --amber-pale: #fff6e5;
+      --red: #b73e48;
+      --red-pale: #fff1f2;
+      --radius: 14px;
+      --mono: Consolas,"SFMono-Regular",monospace;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    button,input,select,textarea {
+      font: inherit;
+    }
+    button,summary {
+      cursor: pointer;
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 9px 13px;
+      line-height: 1.25;
+      transition: background .15s,border-color .15s;
+    }
+    button:hover {
+      background: #f2f6f7;
+      border-color: #becdd3;
+    }
+    button:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible {
+      outline: 3px solid #71c7bd;
+      outline-offset: 2px;
+    }
+    button.primary {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #fff;
+    }
+    button.primary:hover {
+      background: var(--teal-dark);
+    }
+    button.ghost {
+      background: transparent;
+      border-color: transparent;
+    }
+    button.danger {
+      color: var(--red);
+    }
+    button.small {
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+    button.icon {
+      width: 30px;
+      height: 30px;
+      padding: 5px;
+      flex-shrink: 0;
+    }
+    svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .app-header {
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      padding: 18px 32px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      border-radius: 12px;
+      background: var(--teal);
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .brand-mark svg {
+      width: 25px;
+      height: 25px;
+    }
+    .brand h1 {
+      font-size: 17px;
+      line-height: 1.3;
+      letter-spacing: -.4px;
+      margin: 0;
+    }
+    .brand p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 3px 0 0;
+    }
+    .header-actions,.toolbar,.button-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .header-actions {
+      justify-content: flex-end;
+    }
+    .main {
+      max-width: 1760px;
+      margin: auto;
+      padding: 28px 32px 20px;
+    }
+    .eyebrow {
+      font-size: 10px;
+      letter-spacing: 1.7px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .project-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 21px;
+    }
+    .project-title {
+      min-width: 0;
+      flex: 1;
+    }
+    .project-title input {
+      display: block;
+      width: 100%;
+      max-width: 750px;
+      border: 1px solid transparent;
+      background: transparent;
+      padding: 3px 6px;
+      margin: 3px 0 0 -7px;
+      color: var(--ink);
+      border-radius: 6px;
+      font-size: 27px;
+      font-weight: 650;
+      letter-spacing: -.8px;
+    }
+    .project-title input:hover {
+      border-color: #d5dfe4;
+    }
+    .project-title input:focus {
+      background: #fff;
+    }
+    .save-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #35a68c;
+    }
+    .save-status.failed {
+      color: var(--red);
+    }
+    .save-status.failed .status-dot {
+      background: var(--red);
+    }
+    .mode-banner {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid #cfe6e1;
+      background: var(--teal-pale);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: #42685f;
+    }
+    .mode-banner strong {
+      font-weight: 650;
+      color: var(--teal-dark);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mode-banner.exact {
+      background: var(--amber-pale);
+      border-color: #efdbb3;
+      color: var(--amber);
+    }
+    .mode-banner.exact strong {
+      color: var(--amber);
+    }
+    .mode-banner .tag {
+      margin-left: auto;
+      white-space: nowrap;
+      font-size: 10px;
+      letter-spacing: .8px;
+      font-weight: 700;
+    }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) 352px;
+      gap: 20px;
+      align-items: start;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 3px 14px #1b334303;
+      overflow: hidden;
+    }
+    .card-heading {
+      padding: 19px 20px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-heading h2 {
+      font-size: 15px;
+      margin: 0;
+      font-weight: 650;
+      letter-spacing: -.2px;
+    }
+    .card-heading p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .count-badge {
+      font: 11px var(--mono);
+      background: #f1f4f6;
+      border-radius: 5px;
+      padding: 4px 7px;
+      color: #768896;
+      white-space: nowrap;
+    }
+    .table-toolbar {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .table-toolbar .button-group {
+      gap: 5px;
+    }
+    .table-toolbar button {
+      font-size: 12px;
+    }
+    .table-scroll {
+      overflow: auto;
+      max-height: 590px;
+      min-height: 310px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      scrollbar-width: thin;
+      scrollbar-color: #c7d4da transparent;
+    }
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      font-variant-numeric: tabular-nums;
+    }
+    th,td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      height: 57px;
+      text-align: right;
+      min-width: 112px;
+      padding: 0 12px;
+    }
+    th:last-child,td:last-child {
+      border-right: 0;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #f8fafb;
+      text-align: left;
+      font-weight: 500;
+      height: 65px;
+      padding: 0;
+    }
+    th.row-number,td.row-number {
+      position: sticky;
+      left: 0;
+      min-width: 66px;
+      width: 66px;
+      padding: 0 10px;
+      background: #fafbfc;
+      text-align: center;
+      z-index: 2;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    th.row-number {
+      z-index: 4;
+    }
+    td.row-number label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .row-number input {
+      accent-color: var(--teal);
+      width: 13px;
+      height: 13px;
+      margin: 0;
+    }
+    .column-heading {
+      width: 100%;
+      height: 64px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      justify-content: space-between;
+      align-items: flex-start;
+      text-align: left;
+      padding: 11px 12px;
+      gap: 8px;
+    }
+    .column-heading:hover {
+      border-color: transparent;
+      background: #e5efef;
+    }
+    .column-name {
+      display: block;
+      font: 600 13px var(--mono);
+      color: var(--ink);
+    }
+    .column-meta {
+      display: block;
+      font: 10px "Segoe UI",sans-serif;
+      color: var(--muted);
+      margin-top: 5px;
+      white-space: nowrap;
+    }
+    .column-mark {
+      color: #a0aeb7;
+      font-size: 12px;
+      margin-top: 1px;
+    }
+    .locked {
+      background: #f3faf8;
+    }
+    thead .locked {
+      background: #eaf5f2;
+    }
+    .locked .column-name,.lock {
+      color: var(--teal);
+    }
+    .lock {
+      font-size: 11px;
+    }
+    .cell-input {
+      width: 100%;
+      min-width: 70px;
+      max-width: 190px;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 5px;
+      text-align: right;
+      padding: 7px 0;
+      color: var(--ink);
+      font: 13px var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+    .cell-input:hover {
+      border-color: #c8d7dc;
+      background: #ffffffb3;
+    }
+    .cell-input:focus {
+      background: #fff;
+      border-color: var(--teal);
+      outline: 2px solid #a7dcd3;
+      outline-offset: 1px;
+      padding-right: 5px;
+    }
+    .cell-input::placeholder {
+      color: #b9c4cb;
+    }
+    .cell-output {
+      font: 13px var(--mono);
+      white-space: nowrap;
+    }
+    .missing {
+      color: #bac5cc;
+    }
+    .has-error {
+      background: var(--red-pale)!important;
+    }
+    .cell-error {
+      font: 600 11px var(--mono);
+      color: var(--red);
+      cursor: help;
+    }
+    .input-error {
+      display: block;
+      color: var(--red);
+      font: 9px "Segoe UI",sans-serif;
+      margin-top: -5px;
+    }
+    .has-error .cell-input {
+      color: var(--red);
+    }
+    tr.selected td {
+      box-shadow: inset 0 2px 0 #c4e9e2,inset 0 -2px 0 #c4e9e2;
+    }
+    tr.selected td.row-number {
+      background: #dff2ed;
+      color: var(--teal);
+    }
+    .empty-cell {
+      padding: 45px 20px!important;
+      text-align: center;
+      color: var(--muted);
+      height: 220px;
+      font-size: 12px;
+    }
+    .table-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 15px 18px;
+    }
+    .table-bottom p {
+      font-size: 10px;
+      color: var(--muted);
+      margin: 0;
+      text-align: right;
+    }
+    .table-bottom button {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .error-summary {
+      margin: 0;
+      padding: 12px 18px;
+      background: var(--red-pale);
+      color: var(--red);
+      font-size: 12px;
+      border-bottom: 1px solid #f1d9dc;
+      overflow-wrap: anywhere;
+    }
+    .error-summary p {
+      margin: 3px 0;
+    }
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .formula-list {
+      padding: 8px 16px;
+    }
+    .formula-item {
+      padding: 15px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .formula-item:last-child {
+      border-bottom: 0;
+    }
+    .formula-top {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+    .order-number {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: #f0f4f5;
+      color: #7b8b97;
+      font: 11px var(--mono);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .formula-code {
+      font: 12px/1.7 var(--mono);
+      overflow-wrap: anywhere;
+      flex: 1;
+      min-width: 0;
+    }
+    .formula-code b {
+      color: var(--teal);
+      font-weight: 650;
+    }
+    .formula-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-left: 31px;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 7px;
+    }
+    .formula-value {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 9px 0 0 31px;
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .formula-value output {
+      font: 11px var(--mono);
+      color: #3b605c;
+      overflow-wrap: anywhere;
+      text-align: right;
+      min-width: 0;
+    }
+    .formula-error {
+      margin: 7px 0 0 31px;
+      font-size: 11px;
+      color: var(--red);
+      overflow-wrap: anywhere;
+    }
+    .formula-actions {
+      padding: 14px 16px 16px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .formula-actions button {
+      font-size: 12px;
+      width: 100%;
+    }
+    .exact-button.active {
+      background: var(--amber-pale);
+      border-color: #edce97;
+      color: var(--amber);
+    }
+    .formula-context {
+      padding: 11px 18px;
+      background: #fafcfc;
+      border-bottom: 1px solid var(--line);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .sidebar-note {
+      font-size: 11px;
+      line-height: 1.7;
+      color: #7a8c98;
+      margin: 0;
+      padding: 0 5px;
+    }
+    .help-card {
+      padding: 16px 18px;
+    }
+    .help-card summary {
+      font-size: 12px;
+      font-weight: 600;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .help-card summary::after {
+      content: "+";
+      color: var(--muted);
+      font-size: 18px;
+    }
+    .help-card[open] summary::after {
+      content: "−";
+    }
+    .help-content {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.8;
+      padding-top: 9px;
+    }
+    .help-content p {
+      margin: 9px 0;
+    }
+    .help-content code {
+      font: 11px/1.8 var(--mono);
+      color: #4b626d;
+    }
+    .help-content strong {
+      color: #4c626e;
+    }
+    .workspace-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 2px 0;
+      color: #91a0aa;
+      font-size: 10px;
+    }
+    .footer-mode {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .settings {
+      position: relative;
+    }
+    .settings>summary {
+      font-size: 12px;
+      list-style: none;
+      padding: 9px;
+      border-radius: 8px;
+      color: var(--muted);
+    }
+    .settings>summary:hover {
+      background: #eff3f5;
+    }
+    .settings-popover {
+      position: absolute;
+      right: 0;
+      top: 39px;
+      z-index: 10;
+      min-width: 245px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 17px;
+      box-shadow: 0 12px 35px #17324422;
+    }
+    .settings-popover label {
+      font-size: 12px;
+      display: block;
+    }
+    .settings-popover select {
+      width: 100%;
+      margin-top: 8px;
+    }
+    .settings-popover p {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+    .field-input,select,textarea {
+      border: 1px solid #cedae0;
+      background: #fff;
+      border-radius: 7px;
+      color: var(--ink);
+      padding: 9px 10px;
+      min-height: 39px;
+    }
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      box-shadow: 0 20px 90px #17324438;
+      padding: 0;
+      width: min(430px,calc(100vw - 24px));
+      max-height: calc(100dvh - 24px);
+      overflow: auto;
+      color: var(--ink);
+    }
+    dialog::backdrop {
+      background: #182b3b38;
+      backdrop-filter: blur(2px);
+    }
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 21px;
+      border-bottom: 1px solid var(--line);
+    }
+    .dialog-header h2 {
+      font-size: 16px;
+      margin: 0;
+    }
+    .dialog-body {
+      padding: 19px 21px;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .field input,.field select,.field textarea {
+      width: 100%;
+    }
+    .field textarea {
+      resize: vertical;
+      font-family: var(--mono);
+      min-height: 77px;
+    }
+    .field small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      margin-top: 5px;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 100px;
+      gap: 12px;
+    }
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #617582;
+    }
+    .check-label input {
+      accent-color: var(--teal);
+      margin: 0;
+    }
+    .rounding-note {
+      font-size: 11px;
+      line-height: 1.7;
+      color: var(--teal-dark);
+      background: var(--teal-pale);
+      border-radius: 7px;
+      padding: 10px 12px;
+      margin: 13px 0 0;
+    }
+    .dialog-error {
+      font-size: 12px;
+      color: var(--red);
+      background: var(--red-pale);
+      padding: 9px 12px;
+      border-radius: 6px;
+      margin: 0 0 15px;
+      overflow-wrap: anywhere;
+    }
+    .dialog-footer {
+      padding: 15px 21px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .dialog-footer .button-group {
+      margin-left: auto;
+    }
+    .toast {
+      position: fixed;
+      bottom: 23px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #203d49;
+      color: #fff;
+      padding: 12px 17px;
+      border-radius: 10px;
+      box-shadow: 0 8px 30px #1a35452a;
+      z-index: 100;
+      font-size: 12px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      max-width: calc(100vw - 24px);
+    }
+    .toast button {
+      padding: 4px 8px;
+      background: #ffffff18;
+      border-color: #ffffff33;
+      color: white;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    [hidden] {
+      display: none!important;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+    @media(min-width:1500px) {
+      .workspace {
+        grid-template-columns: minmax(0,1fr) 372px;
+      }
+      .table-scroll {
+        min-height: 410px;
+      }
+      th,td {
+        min-width: 115px;
+      }
+    }
+    @media(max-width:1120px) {
+      .app-header {
+        padding: 16px 22px;
+        gap: 14px;
+      }
+      .brand h1 {
+        font-size: 15px;
+      }
+      .brand p {
+        font-size: 10px;
+      }
+      .main {
+        padding: 23px 22px;
+      }
+      .workspace {
+        grid-template-columns: minmax(0,1fr) 310px;
+        gap: 15px;
+      }
+      .header-actions button {
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+      .mode-banner {
+        gap: 10px;
+      }
+      .mode-banner .tag {
+        display: none;
+      }
+      .project-title input {
+        font-size: 24px;
+      }
+      .table-toolbar {
+        padding: 10px;
+      }
+      .table-bottom {
+        padding: 13px;
+      }
+      .table-bottom p {
+        max-width: 200px;
+      }
+    }
+    @media(max-width:850px) {
+      .workspace {
+        grid-template-columns: minmax(0,1fr);
+      }
+      .sidebar {
+        display: grid;
+        grid-template-columns: minmax(0,1.4fr) minmax(0,1fr);
+        align-items: start;
+      }
+      .formula-card {
+        grid-row: span 2;
+      }
+      .sidebar-note {
+        padding: 0 10px;
+      }
+      .table-scroll {
+        max-height: 480px;
+        min-height: 280px;
+      }
+      .mode-banner {
+        align-items: flex-start;
+      }
+      .mode-banner strong {
+        padding-top: 1px;
+      }
+      .project-bar {
+        align-items: flex-start;
+      }
+      .project-title input {
+        font-size: 22px;
+      }
+      .project-bar .toolbar {
+        max-width: 175px;
+        justify-content: flex-end;
+      }
+      .app-header {
+        flex-wrap: wrap;
+      }
+      .header-actions {
+        margin-left: auto;
+      }
+      .formula-list {
+        padding: 5px 16px;
+      }
+    }
+    @media(max-width:560px) {
+      .app-header {
+        padding: 15px 15px 12px;
+        gap: 14px;
+      }
+      .brand-mark {
+        width: 37px;
+        height: 37px;
+        border-radius: 10px;
+      }
+      .brand h1 {
+        font-size: 14px;
+      }
+      .brand p {
+        font-size: 10px;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+        gap: 5px;
+      }
+      .header-actions>button {
+        flex: 1;
+        font-size: 11px;
+        padding: 9px 7px;
+      }
+      .header-actions>button svg {
+        width: 14px;
+      }
+      .settings>summary {
+        font-size: 11px;
+        padding: 8px;
+      }
+      .main {
+        padding: 21px 12px;
+      }
+      .project-bar {
+        display: block;
+        margin-bottom: 16px;
+      }
+      .project-title input {
+        font-size: 21px;
+      }
+      .project-bar .toolbar {
+        max-width: none;
+        justify-content: space-between;
+        margin-top: 12px;
+      }
+      .toolbar>.button-group {
+        gap: 3px;
+      }
+      .toolbar button {
+        font-size: 11px;
+      }
+      .mode-banner {
+        display: block;
+        padding: 11px 12px;
+        font-size: 10px;
+        margin-bottom: 15px;
+      }
+      .mode-banner strong {
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      .mode-banner strong svg {
+        width: 14px;
+      }
+      .card-heading {
+        padding: 16px;
+      }
+      .card-heading h2 {
+        font-size: 14px;
+      }
+      .table-toolbar {
+        gap: 6px;
+      }
+      .table-toolbar .button-group {
+        gap: 1px;
+      }
+      .table-toolbar button {
+        font-size: 10px;
+        padding: 8px 7px;
+      }
+      .table-toolbar button svg {
+        width: 13px;
+      }
+      .table-toolbar .count-badge {
+        font-size: 10px;
+      }
+      .table-bottom p {
+        font-size: 9px;
+        max-width: 170px;
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+      }
+      .sidebar>* {
+        width: 100%;
+      }
+      .formula-card .card-heading {
+        padding: 16px;
+      }
+      .formula-list {
+        padding: 3px 16px;
+      }
+      .formula-code {
+        font-size: 13px;
+      }
+      .formula-item {
+        padding: 14px 0;
+      }
+      .sidebar-note {
+        padding: 0 5px;
+      }
+      .toast {
+        bottom: 13px;
+        min-width: 270px;
+        font-size: 11px;
+      }
+      .workspace-footer {
+        font-size: 9px;
+      }
+      .save-status {
+        font-size: 10px;
+      }
+      th,td {
+        height: 53px;
+        min-width: 108px;
+      }
+      .cell-input,.cell-output {
+        font-size: 12px;
+      }
+      .dialog-body {
+        padding: 17px;
+      }
+      .dialog-footer {
+        padding: 13px 17px;
+      }
+      .dialog-footer button {
+        font-size: 12px;
+      }
+    }
+    @media(prefers-reduced-motion:reduce) {
+      * {
+        transition: none!important;
+        scroll-behavior: auto!important;
+      }
+    }
+    @media print {
+      body {
+        background: white;
+      }
+      .app-header,.project-bar .toolbar,.table-toolbar,.table-bottom,.formula-actions,.settings,.toast,.workspace-footer {
+        display: none!important;
+      }
+      .main {
+        padding: 0;
+      }
+      .workspace {
+        display: block;
+      }
+      .sidebar {
+        display: block;
+        margin-top: 20px;
+      }
+      .help-card,.sidebar-note {
+        display: none;
+      }
+      .table-scroll {
+        max-height: none;
+        overflow: visible;
+      }
+      .card {
+        box-shadow: none;
+      }
+      .project-title input {
+        font-size: 20px;
+      }
+      .row-number input {
+        display: none;
+      }
+      th,td {
+        min-width: 0;
+        padding: 5px;
+        font-size: 10px;
+      }
+      .cell-input {
+        min-width: 0;
+        width: 100%;
+        font-size: 10px;
+      }
+      .column-heading {
+        padding: 5px;
+      }
+      .column-name {
+        font-size: 10px;
+      }
+      .column-meta {
+        font-size: 8px;
+      }
+      .cell-output {
+        font-size: 10px;
+      }
+    }
+    </style>
+    <!-- BEGIN: новые элементы масштаба и именованных сохранений -->
+    <style id="project-view-tools-styles">
+      .table-scale-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        flex-shrink: 0;
+      }
+      .table-scale-controls button {
+        padding: 8px;
+        min-width: 33px;
+        font-size: 12px;
+      }
+      .table-scale-percent {
+        min-width: 43px;
+        text-align: center;
+        font: 11px var(--mono);
+        color: var(--muted);
+      }
+      .named-projects-button { white-space: nowrap; }
+      .named-projects-dialog { width: min(580px, calc(100vw - 24px)); }
+      .named-projects-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 21px;
+        border-bottom: 1px solid var(--line);
+      }
+      .named-projects-heading h2 { font-size: 16px; margin: 0; }
+      .named-projects-list { padding: 5px 21px 15px; }
+      .named-project-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .named-project-row:last-child { border-bottom: 0; }
+      .named-project-info { flex: 1; min-width: 140px; overflow-wrap: anywhere; }
+      .named-project-info strong { display: block; font-size: 13px; }
+      .named-project-date { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); }
+      .named-project-actions { display: flex; gap: 6px; }
+      .named-projects-empty { padding: 15px 0; font-size: 12px; color: var(--muted); }
+
+      /* Только при масштабе, отличном от 100%. Размеры участвуют в обычном
+         потоке: нативный скролл и координаты поповеров остаются корректными. */
+      .table-scale-surface { font-size: calc(14px * var(--table-scale)); }
+      .table-scale-surface table { width: calc(100% * var(--table-scale)); }
+      .table-scale-surface th, .table-scale-surface td {
+        min-width: calc(112px * var(--table-scale));
+        height: calc(57px * var(--table-scale));
+        padding: 0 calc(12px * var(--table-scale));
+      }
+      .table-scale-surface thead th { height: calc(65px * var(--table-scale)); padding: 0; }
+      .table-scale-surface th.row-number, .table-scale-surface td.row-number {
+        min-width: calc(66px * var(--table-scale));
+        width: calc(66px * var(--table-scale));
+        padding: 0 calc(10px * var(--table-scale));
+        font-size: calc(11px * var(--table-scale));
+      }
+      .table-scale-surface td.row-number label { gap: calc(8px * var(--table-scale)); }
+      .table-scale-surface .row-number input {
+        width: calc(13px * var(--table-scale));
+        height: calc(13px * var(--table-scale));
+      }
+      .table-scale-surface .column-heading {
+        height: calc(64px * var(--table-scale));
+        padding: calc(11px * var(--table-scale)) calc(12px * var(--table-scale));
+        gap: calc(8px * var(--table-scale));
+      }
+      .table-scale-surface .column-name { font-size: calc(13px * var(--table-scale)); }
+      .table-scale-surface .column-meta {
+        font-size: calc(10px * var(--table-scale));
+        margin-top: calc(5px * var(--table-scale));
+      }
+      .table-scale-surface .column-mark {
+        font-size: calc(12px * var(--table-scale));
+        margin-top: calc(1px * var(--table-scale));
+      }
+      .table-scale-surface .cell-input {
+        min-width: calc(70px * var(--table-scale));
+        max-width: calc(190px * var(--table-scale));
+        padding: calc(7px * var(--table-scale)) 0;
+        border-radius: calc(5px * var(--table-scale));
+        font-size: calc(13px * var(--table-scale));
+      }
+      .table-scale-surface .cell-input:focus { padding-right: calc(5px * var(--table-scale)); }
+      .table-scale-surface .cell-output { font-size: calc(13px * var(--table-scale)); }
+      .table-scale-surface .cell-error { font-size: calc(11px * var(--table-scale)); }
+      .table-scale-surface .input-error {
+        font-size: calc(9px * var(--table-scale));
+        margin-top: calc(-5px * var(--table-scale));
+      }
+      .table-scale-surface .empty-cell {
+        padding: calc(45px * var(--table-scale)) calc(20px * var(--table-scale)) !important;
+        height: calc(220px * var(--table-scale));
+        font-size: calc(12px * var(--table-scale));
+      }
+      @media (min-width: 1500px) {
+        .table-scale-surface th, .table-scale-surface td { min-width: calc(115px * var(--table-scale)); }
+        .table-scale-surface th.row-number, .table-scale-surface td.row-number { min-width: calc(66px * var(--table-scale)); }
+      }
+      @media (max-width: 560px) {
+        .table-scale-surface th, .table-scale-surface td {
+          min-width: calc(108px * var(--table-scale));
+          height: calc(53px * var(--table-scale));
+        }
+        .table-scale-surface thead th { height: calc(65px * var(--table-scale)); }
+        .table-scale-surface th.row-number, .table-scale-surface td.row-number { min-width: calc(66px * var(--table-scale)); }
+        .table-scale-surface .cell-input, .table-scale-surface .cell-output { font-size: calc(12px * var(--table-scale)); }
+        .table-scale-surface .empty-cell { height: calc(220px * var(--table-scale)); }
+      }
+    </style>
+    <!-- END: новые элементы масштаба и именованных сохранений -->
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M9 3h6M10 3v6l-5.7 9.1A2 2 0 0 0 6 21h12a2 2 0 0 0 1.7-2.9L14 9V3M7 15h10"/>
+            <path d="m10 17 1 1m3-5h.01"/>
+          </svg>
+        </div>
+        <div>
+          <h1>
+            Лабораторный формульный калькулятор
+          </h1>
+          <p>
+            Измерения. Формулы. Каждый шаг под контролем.
+          </p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="save-btn" type="button">
+          <svg viewBox="0 0 24 24">
+            <path d="M5 3h12l4 4v14H3V3h2Z"/>
+            <path d="M7 3v6h9V3M7 21v-8h10v8"/>
+          </svg>
+          Сохранить
+        </button>
+        <button id="load-btn" type="button">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 7V4h6l3 3h9v13H3V7Z"/>
+            <path d="M3 10h18"/>
+          </svg>
+          Загрузить
+        </button>
+        <!-- BEGIN: кнопки именованных сохранений -->
+        <button id="save-as-btn" class="named-projects-button" type="button">Сохранить как…</button>
+        <button id="open-named-btn" class="named-projects-button" type="button">Открыть…</button>
+        <!-- END: кнопки именованных сохранений -->
+        <button id="export-btn" class="primary" type="button" title="CSV всегда содержит округлённые значения для отчёта">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>
+          </svg>
+          Экспорт CSV
+        </button>
+        <!-- BEGIN: управление масштабом таблицы -->
+        <div class="table-scale-controls" role="group" aria-label="Масштаб таблицы">
+          <button id="table-scale-minus-btn" type="button" aria-label="Уменьшить масштаб таблицы">A−</button>
+          <output id="table-scale-percent" class="table-scale-percent" aria-live="polite">100%</output>
+          <button id="table-scale-plus-btn" type="button" aria-label="Увеличить масштаб таблицы">A+</button>
+        </div>
+        <!-- END: управление масштабом таблицы -->
+        <details class="settings" id="settings">
+          <summary aria-label="Настройки CSV">
+            Настройки
+          </summary>
+          <div class="settings-popover">
+            <label for="csv-delimiter">
+              Разделитель CSV
+            </label>
+            <select id="csv-delimiter">
+              <option value=";">
+                Точка с запятой ; (Excel RU)
+              </option>
+              <option value=",">
+                Запятая ,
+              </option>
+            </select>
+            <p>
+              UTF-8 с BOM. Числа с точкой. Экспортируются значения с заданной разрядностью.
+            </p>
+          </div>
+        </details>
+      </div>
+    </header>
+    <main class="main">
+      <section class="project-bar" aria-label="Проект">
+        <div class="project-title">
+          <label class="eyebrow" for="project-title">
+            Рабочий проект
+          </label>
+          <input id="project-title" aria-label="Название проекта" maxlength="180" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="toolbar">
+          <div class="button-group">
+            <button id="new-btn" class="ghost" type="button">
+              Новый проект
+            </button>
+            <button id="demo-btn" type="button">
+              Пример
+            </button>
+          </div>
+          <span class="save-status" id="save-status" role="status">
+            <span class="status-dot">
+            </span>
+            <span id="save-status-text">
+              Автосохранение включено
+            </span>
+          </span>
+        </div>
+      </section>
+      <div class="mode-banner" id="mode-banner">
+        <strong id="mode-heading">
+        </strong>
+        <span id="mode-description">
+        </span>
+        <span class="tag" id="mode-tag">
+          ДЛЯ ОТЧЁТА
+        </span>
+      </div>
+      <div class="workspace">
+        <section class="card table-card" aria-labelledby="table-title">
+          <div class="card-heading">
+            <div>
+              <h2 id="table-title">
+                Таблица измерений
+              </h2>
+              <p>
+                Вводите данные · нажмите на заголовок, чтобы настроить столбец
+              </p>
+            </div>
+            <span class="count-badge" id="dimension-count">
+            </span>
+          </div>
+          <div class="table-toolbar">
+            <div class="button-group">
+              <button id="add-column-btn" type="button">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                Добавить столбец
+              </button>
+              <button id="delete-rows-btn" class="ghost danger" type="button" disabled title="Выберите строки флажками слева">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>
+                </svg>
+                Удалить строку
+              </button>
+            </div>
+            <span class="count-badge" id="selection-count">
+              Строки не выбраны
+            </span>
+          </div>
+          <div id="error-summary" class="error-summary" role="status" hidden>
+          </div>
+          <div class="table-scroll" id="table-scroll" tabindex="0" aria-label="Таблица, прокручивается по горизонтали">
+            <table id="data-table" aria-label="Измерения и результаты">
+              <thead>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-bottom">
+            <button id="add-row-btn" class="ghost" type="button">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Добавить строку
+            </button>
+            <p>
+              <span class="lock" aria-hidden="true">
+                🔒
+              </span>
+              Цветные столбцы фиксируют округлённое значение для следующих формул
+            </p>
+          </div>
+        </section>
+        <aside class="sidebar" aria-label="Расчёт и справка">
+          <section class="card formula-card" aria-labelledby="formula-title">
+            <div class="card-heading">
+              <div>
+                <h2 id="formula-title">
+                  Порядок вычислений
+                </h2>
+                <p>
+                  Именованные формулы и фиксация значений
+                </p>
+              </div>
+              <span class="count-badge" id="formula-count">
+                0
+              </span>
+            </div>
+            <div class="formula-context" id="formula-context">
+            </div>
+            <div class="formula-list" id="formula-list">
+            </div>
+            <div class="formula-actions">
+              <button id="exact-btn" class="exact-button" type="button" aria-pressed="false">
+              </button>
+              <button id="recalculate-btn" class="ghost" type="button">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20 7V3l-4 4M4 17v4l4-4M20 7a8 8 0 0 0-14-2M4 17a8 8 0 0 0 14 2"/>
+                </svg>
+                Пересчитать
+              </button>
+            </div>
+          </section>
+          <details class="card help-card">
+            <summary>
+              Справочник формул
+            </summary>
+            <div class="help-content">
+              <p>
+                <strong>
+                  Операции
+                </strong>
+                <br>
+                <code>
+                  + − * / ^ ( )
+                </code>
+                <br>
+                Степень правоассоциативна:
+                <code>
+                  2^3^2 = 512
+                </code>
+                ,
+                <code>
+                  -2^2 = -4
+                </code>
+                . Десятичная точка в формулах; при вводе данных можно использовать запятую.
+              </p>
+              <p>
+                <strong>
+                  Функции одного аргумента
+                </strong>
+                <br>
+                <code>
+                  sin cos tan asin acos atan sqrt abs exp ln log10 log2
+                </code>
+                <br>
+                Углы в радианах. Константы:
+                <code>
+                  pi
+                </code>
+                и
+                <code>
+                  e
+                </code>
+                .
+              </p>
+              <p>
+                <strong>
+                  Агрегаты по всем строкам
+                </strong>
+                <br>
+                <code>
+                  mean(t), sum(t), min(t), max(t), std(t), count(t), median(t)
+                </code>
+                <br>
+                Только имя столбца в скобках. Пустые ячейки пропускаются; ошибки не скрываются.
+                <code>
+                  std
+                </code>
+                — выборочное стандартное отклонение (n − 1), нужно хотя бы 2 значения. Итоговая формула имеет одинаковый результат во всех строках.
+              </p>
+              <p>
+                <strong>
+                  Обязательное округление
+                </strong>
+                <br>
+                Формат столбца фиксирует число сразу после вычисления. Половины округляются от нуля:
+                <code>
+                  −1.235 → −1.24
+                </code>
+                при 2 знаках. Если формат не задан, фиксации нет. Галочка «Убирать хвостовые нули» меняет только отображение.
+              </p>
+              <p>
+                <strong>
+                  Точный просмотр
+                </strong>
+                <br>
+                Показывает расчёт без фиксации из исходных данных. CSV всегда берётся из округлённого расчёта. Во время редактирования входной ячейки виден исходный ввод; после выхода — форматированный результат.
+              </p>
+              <p>
+                <strong>
+                  Сохранение
+                </strong>
+                <br>
+                Изменения автоматически сохраняются в этом браузере. «Сохранить» создаёт отдельную контрольную копию; «Загрузить» восстанавливает её. При замене проекта доступна отмена.
+              </p>
+            </div>
+          </details>
+          <p class="sidebar-note">
+            Работает полностью офлайн. Данные хранятся только в вашем браузере на этом устройстве.
+          </p>
+        </aside>
+      </div>
+      <footer class="workspace-footer">
+        <span class="footer-mode">
+          <span class="status-dot">
+          </span>
+          Локальный расчёт · без сетевых запросов
+        </span>
+        <span id="calculation-status" role="status" aria-live="polite">
+        </span>
+      </footer>
+    </main>
+    <dialog id="column-dialog" aria-labelledby="column-dialog-title">
+      <form id="column-form" novalidate>
+        <div class="dialog-header">
+          <h2 id="column-dialog-title">
+            Настройки столбца
+          </h2>
+          <button id="close-column-btn" class="ghost icon" type="button" aria-label="Закрыть">
+            ✕
+          </button>
+        </div>
+        <div class="dialog-body">
+          <p id="column-error" class="dialog-error" role="alert" hidden>
+          </p>
+          <div class="field">
+            <label for="column-name">
+              Имя переменной
+            </label>
+            <input id="column-name" class="field-input" maxlength="64" autocomplete="off" spellcheck="false" placeholder="Например, t_avg">
+            <small>
+              Латинские буквы, цифры и _. Первый символ — буква или _.
+            </small>
+          </div>
+          <div class="field">
+            <label for="column-type">
+              Тип столбца
+            </label>
+            <select id="column-type">
+              <option value="input">
+                Ввод — измеренные данные
+              </option>
+              <option value="formula">
+                Формула — вычисляемое значение
+              </option>
+            </select>
+          </div>
+          <div class="field" id="expression-field">
+            <label for="column-expr">
+              Формула
+            </label>
+            <textarea id="column-expr" spellcheck="false" placeholder="Например, (t1 + t2 + t3) / 3">
+            </textarea>
+            <small>
+              Без «имя =». Например: s / t_avg, sqrt(x), mean(t).
+            </small>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="column-mode">
+                Округление
+              </label>
+              <select id="column-mode">
+                <option value="decimals">
+                  Знаки после запятой
+                </option>
+                <option value="sigfigs">
+                  Значащие цифры
+                </option>
+                <option value="none">
+                  Без заданного формата
+                </option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="column-digits">
+                Число знаков
+              </label>
+              <input class="field-input" id="column-digits" type="number" min="0" max="15" step="1" value="3">
+            </div>
+          </div>
+          <label class="check-label">
+            <input type="checkbox" id="column-trim">
+            Убирать хвостовые нули (trimZeros)
+          </label>
+          <p id="rounding-note" class="rounding-note">
+            🔒 Результат будет округлён и зафиксирован. Следующие формулы используют именно это число.
+          </p>
+        </div>
+        <div class="dialog-footer">
+          <button id="delete-column-btn" class="ghost danger" type="button">
+            Удалить столбец
+          </button>
+          <div class="button-group">
+            <button id="cancel-column-btn" type="button">
+              Отмена
+            </button>
+            <button class="primary" type="submit">
+              Применить
+            </button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" hidden>
+      <span id="toast-message">
+      </span>
+      <button id="undo-btn" type="button" hidden>
+        Отменить
+      </button>
+    </div>
+    <!-- BEGIN: список именованных сохранений -->
+    <dialog id="named-projects-dialog" class="named-projects-dialog" aria-labelledby="named-projects-title">
+      <div class="named-projects-heading">
+        <h2 id="named-projects-title">Сохранённые проекты</h2>
+        <button id="close-named-projects-btn" class="ghost icon" type="button" aria-label="Закрыть список сохранений">✕</button>
+      </div>
+      <div id="named-projects-list" class="named-projects-list"></div>
+    </dialog>
+    <!-- END: список именованных сохранений -->
+    <script>
+  "use strict";
+  // Единственный глобальный объект. Остальные имена изолированы замыканием.
+  const state = {
+    project: null, rounded: null, exact: null,
+    view: { exact: false, selectedRows: new Set(), editingColumn: null },
+    timers: { calculation: null, toast: null },
+    storageAvailable: true, undoProject: null, api: null
+  };
+
+  (() => {
+    "use strict";
+
+    // 1) Парсер и вычисление выражений
+    // Текст формулы никогда не исполняется через eval / Function.
+    const unaryFunctions = new Map([
+      ["sin", Math.sin], ["cos", Math.cos], ["tan", Math.tan],
+      ["asin", Math.asin], ["acos", Math.acos], ["atan", Math.atan],
+      ["sqrt", Math.sqrt], ["abs", Math.abs], ["exp", Math.exp],
+      ["ln", Math.log], ["log10", Math.log10], ["log2", Math.log2]
+    ]);
+    const aggregateNames = new Set(["mean", "sum", "min", "max", "std", "count", "median"]);
+    const constants = new Map([["pi", Math.PI], ["e", Math.E]]);
+    const reservedNames = new Set([...unaryFunctions.keys(), ...aggregateNames, ...constants.keys(), "__proto__", "constructor", "prototype"]);
+
+    function tokenize(source) {
+      const tokens = [];
+      let position = 0;
+      while (position < source.length) {
+        const rest = source.slice(position);
+        if (/^\s/.test(rest)) { position += 1; continue; }
+        const number = rest.match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
+        const name = rest.match(/^[A-Za-z_][A-Za-z0-9_]*/);
+        if (number) {
+          tokens.push({ type: "number", value: Number(number[0]), start: position, end: position + number[0].length });
+          position += number[0].length;
+        } else if (name) {
+          tokens.push({ type: "name", value: name[0], start: position, end: position + name[0].length });
+          position += name[0].length;
+        } else if ("+-*/^(),".includes(source[position])) {
+          tokens.push({ type: source[position], value: source[position], start: position, end: position + 1 });
+          position += 1;
+        } else {
+          throw new Error(`Недопустимый символ «${source[position]}» (позиция ${position + 1}). Используйте латиницу и десятичную точку.`);
+        }
+        if (tokens.length > 1000) throw new Error("Формула слишком длинная: максимум 1000 элементов.");
+      }
+      tokens.push({ type: "end", start: position, end: position });
+      return tokens;
+    }
+
+    function parseExpression(source) {
+      if (typeof source !== "string" || !source.trim()) throw new Error("Введите выражение формулы.");
+      if (source.length > 4000) throw new Error("Формула слишком длинная: максимум 4000 символов.");
+      const tokens = tokenize(source);
+      let index = 0;
+      let depth = 0;
+      const peek = () => tokens[index];
+      const accept = type => peek().type === type ? tokens[index++] : null;
+      function syntax(message) { throw new Error(`${message} (позиция ${peek().start + 1}).`); }
+      function expect(type, message) { if (!accept(type)) syntax(message); }
+      function guarded(parser) {
+        depth += 1;
+        if (depth > 100) syntax("Слишком глубокая вложенность формулы");
+        try { return parser(); } finally { depth -= 1; }
+      }
+      function additive() {
+        let node = multiplicative();
+        while (peek().type === "+" || peek().type === "-") {
+          const operator = tokens[index++].type;
+          node = { kind: "binary", operator, left: node, right: multiplicative() };
+        }
+        return node;
+      }
+      function multiplicative() {
+        let node = unary();
+        while (peek().type === "*" || peek().type === "/") {
+          const operator = tokens[index++].type;
+          node = { kind: "binary", operator, left: node, right: unary() };
+        }
+        return node;
+      }
+      function unary() {
+        if (peek().type === "+" || peek().type === "-") {
+          const operator = tokens[index++].type;
+          return { kind: "unary", operator, argument: guarded(unary) };
+        }
+        return power();
+      }
+      function power() {
+        const left = primary();
+        return accept("^") ? { kind: "binary", operator: "^", left, right: guarded(unary) } : left;
+      }
+      function primary() {
+        const number = accept("number");
+        if (number) return { kind: "number", value: checkedNumber(number.value) };
+        if (accept("(")) {
+          const node = guarded(additive);
+          expect(")", "Не хватает закрывающей скобки «)»");
+          return node;
+        }
+        const name = accept("name");
+        if (!name) syntax("Ожидалось число, имя переменной или «(»");
+        if (!accept("(")) return constants.has(name.value) ? { kind: "number", value: constants.get(name.value) } : { kind: "variable", name: name.value };
+        if (!unaryFunctions.has(name.value) && !aggregateNames.has(name.value)) syntax(`Неизвестная функция «${name.value}»`);
+        const argument = guarded(additive);
+        if (peek().type === ",") syntax(`Функция ${name.value} принимает один аргумент`);
+        expect(")", `Не хватает «)» после аргумента ${name.value}`);
+        if (aggregateNames.has(name.value)) {
+          if (argument.kind !== "variable") syntax(`В ${name.value}(col) нужно указать имя одного столбца`);
+          return { kind: "aggregate", name: name.value, column: argument.name };
+        }
+        return { kind: "call", name: name.value, argument };
+      }
+      const ast = additive();
+      if (peek().type !== "end") syntax("Неожиданный элемент: проверьте оператор и скобки");
+      return ast;
+    }
+
+    function checkedNumber(value) {
+      if (!Number.isFinite(value)) throw new Error("Результат не является конечным числом: проверьте область определения и величину значений.");
+      return Object.is(value, -0) ? 0 : value;
+    }
+
+    function evaluateExpression(node, context) {
+      switch (node.kind) {
+        case "number": return node.value;
+        case "variable": return context.variable(node.name);
+        case "aggregate": return context.aggregate(node.name, node.column);
+        case "unary": {
+          const value = evaluateExpression(node.argument, context);
+          return checkedNumber(node.operator === "-" ? -value : value);
+        }
+        case "binary": {
+          const left = evaluateExpression(node.left, context);
+          const right = evaluateExpression(node.right, context);
+          if (node.operator === "/" && right === 0) throw new Error("Деление на ноль.");
+          if (node.operator === "^" && left === 0 && right < 0) throw new Error("Ноль нельзя возвести в отрицательную степень (деление на ноль).");
+          if (node.operator === "^" && left < 0 && !Number.isInteger(right)) throw new Error("Дробная степень отрицательного числа не определена в действительных числах.");
+          const operations = { "+": () => left + right, "-": () => left - right, "*": () => left * right, "/": () => left / right, "^": () => left ** right };
+          return checkedNumber(operations[node.operator]());
+        }
+        case "call": {
+          const value = evaluateExpression(node.argument, context);
+          if (node.name === "sqrt" && value < 0) throw new Error("Корень из отрицательного числа не определён.");
+          if (["ln", "log10", "log2"].includes(node.name) && value <= 0) throw new Error(`Аргумент ${node.name} должен быть больше нуля.`);
+          if (["asin", "acos"].includes(node.name) && Math.abs(value) > 1) throw new Error(`Аргумент ${node.name} должен быть от −1 до 1.`);
+          // Math.tan(pi/2) возвращает большое конечное число из-за приближения pi.
+          if (node.name === "tan" && Math.abs(Math.cos(value)) < 1e-15) throw new Error("Тангенс не определён при этом угле (cos близок к нулю).");
+          return checkedNumber(unaryFunctions.get(node.name)(value));
+        }
+        default: throw new Error("Неизвестный элемент выражения.");
+      }
+    }
+
+    function compensatedSum(values) {
+      let total = 0;
+      let correction = 0;
+      for (const value of values) {
+        const adjusted = value - correction;
+        const next = total + adjusted;
+        correction = (next - total) - adjusted;
+        total = checkedNumber(next);
+      }
+      return total;
+    }
+
+    function aggregateValues(name, values) {
+      if (name === "count") return values.length;
+      if (name === "sum") return compensatedSum(values);
+      if (!values.length) throw new Error(`Для ${name} нет заполненных значений.`);
+      if (name === "mean") return checkedNumber(compensatedSum(values) / values.length);
+      if (name === "min") return values.reduce((a, b) => Math.min(a, b));
+      if (name === "max") return values.reduce((a, b) => Math.max(a, b));
+      if (name === "median") {
+        const sorted = [...values].sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[middle] : checkedNumber(sorted[middle - 1] / 2 + sorted[middle] / 2);
+      }
+      if (name === "std") {
+        if (values.length < 2) throw new Error("Для std нужны минимум два значения (выборочное отклонение, n − 1).");
+        let average = 0;
+        let squareSum = 0;
+        values.forEach((value, index) => {
+          const delta = value - average;
+          average += delta / (index + 1);
+          squareSum += delta * (value - average);
+        });
+        return checkedNumber(Math.sqrt(Math.max(0, checkedNumber(squareSum)) / (values.length - 1)));
+      }
+      throw new Error(`Неизвестный агрегат «${name}».`);
+    }
+
+    // 2) applyRounding и форматирование
+    // Десятичный сдвиг через строку не вносит ошибку 1.005 * 100 = 100.499…
+    // Math.round применяется к модулю: половины отрицательных чисел идут от нуля.
+    function roundDecimalPlace(value, places) {
+      const [mantissa, exponent = "0"] = Math.abs(value).toString().split("e");
+      const shifted = Number(`${mantissa}e${Number(exponent) + places}`);
+      if (!Number.isFinite(shifted)) return value;
+      const integer = Math.round(shifted);
+      const [roundedMantissa, roundedExponent = "0"] = integer.toString().split("e");
+      return checkedNumber(Math.sign(value) * Number(`${roundedMantissa}e${Number(roundedExponent) - places}`));
+    }
+
+    function validateFormat(format) {
+      if (format == null) return;
+      if (!["decimals", "sigfigs"].includes(format.mode)) throw new Error("Неизвестный режим округления.");
+      const minimum = format.mode === "sigfigs" ? 1 : 0;
+      if (!Number.isInteger(format.digits) || format.digits < minimum || format.digits > 15) throw new Error(`Число знаков должно быть целым от ${minimum} до 15.`);
+    }
+
+    function applyRounding(value, format) {
+      checkedNumber(value);
+      validateFormat(format);
+      if (!format || value === 0) return value === 0 ? 0 : value;
+      if (format.mode === "decimals") return roundDecimalPlace(value, format.digits);
+      // Экспонента из toExponential надёжнее log10 возле степеней десяти.
+      const exponent = Number(Math.abs(value).toExponential().split("e")[1]);
+      return roundDecimalPlace(value, format.digits - 1 - exponent);
+    }
+
+    function fixedDecimals(value, digits) {
+      if (Math.abs(value) < 1e21) return value.toFixed(digits);
+      const sign = value < 0 ? "-" : "";
+      const [mantissa, exponent = "0"] = Math.abs(value).toString().split("e");
+      const characters = mantissa.replace(".", "");
+      const decimalPosition = 1 + Number(exponent);
+      const integer = characters.padEnd(decimalPosition, "0");
+      return sign + integer + (digits ? "." + "0".repeat(digits) : "");
+    }
+
+    function trimFractionZeros(text) {
+      const [mantissa, exponent] = text.split("e");
+      const trimmed = mantissa.includes(".") ? mantissa.replace(/0+$/, "").replace(/\.$/, "") : mantissa;
+      return trimmed + (exponent === undefined ? "" : "e" + exponent);
+    }
+
+    function formatValue(value, variable, exact = false) {
+      if (value == null) return "";
+      checkedNumber(value);
+      if (exact || !variable.format) return String(value);
+      const rounded = applyRounding(value, variable.format);
+      const text = variable.format.mode === "decimals"
+        ? fixedDecimals(rounded, variable.format.digits)
+        : rounded.toPrecision(variable.format.digits);
+      return variable.trimZeros ? trimFractionZeros(text) : text;
+    }
+
+    function formatDescription(variable) {
+      if (!variable.format) return "без заданного формата";
+      const { mode, digits } = variable.format;
+      return mode === "decimals" ? `${digits} зн. после запятой` : `${digits} значащих цифр`;
+    }
+
+    // 3) Граф зависимостей и топосортировка
+    function collectDependencies(node, dependencies = new Set()) {
+      if (node.kind === "variable") dependencies.add(node.name);
+      if (node.kind === "aggregate") dependencies.add(node.column);
+      if (node.argument) collectDependencies(node.argument, dependencies);
+      if (node.left) collectDependencies(node.left, dependencies);
+      if (node.right) collectDependencies(node.right, dependencies);
+      return dependencies;
+    }
+
+    function buildDependencyGraph(variables) {
+      const byName = new Map(variables.map(variable => [variable.name, variable]));
+      const asts = new Map();
+      const dependencies = new Map();
+      const errors = new Map();
+      for (const variable of variables) {
+        const names = new Set();
+        if (variable.type === "formula") {
+          try {
+            const ast = parseExpression(variable.expr);
+            asts.set(variable.name, ast);
+            collectDependencies(ast, names);
+            const unknown = [...names].filter(name => !byName.has(name));
+            if (unknown.length) errors.set(variable.name, `Неизвестная переменная: ${unknown.join(", ")}. Добавьте столбец или исправьте имя.`);
+          } catch (error) { errors.set(variable.name, error.message); }
+        }
+        dependencies.set(variable.name, names);
+      }
+      const marks = new Map();
+      const stack = [];
+      const order = [];
+      const cyclic = new Set();
+      function visit(name) {
+        if (marks.get(name) === 2) return;
+        if (marks.get(name) === 1) {
+          const cycle = stack.slice(stack.indexOf(name)).concat(name);
+          const message = `Циклическая зависимость: ${cycle.join(" → ")}`;
+          cycle.forEach(member => { cyclic.add(member); errors.set(member, message); });
+          return;
+        }
+        marks.set(name, 1);
+        stack.push(name);
+        for (const dependency of dependencies.get(name)) if (byName.has(dependency)) visit(dependency);
+        stack.pop();
+        marks.set(name, 2);
+        order.push(name);
+      }
+      for (const variable of variables) visit(variable.name);
+      // Циклические вершины не имеют топологического порядка; их показываем после него.
+      return { order: order.filter(name => !cyclic.has(name)), cyclic: [...cyclic], byName, asts, dependencies, errors };
+    }
+
+    function parseInput(raw) {
+      if (raw == null || String(raw).trim() === "") return null;
+      if (typeof raw !== "string" && typeof raw !== "number") throw new Error("Введите число.");
+      const text = String(raw).trim().replace(",", ".");
+      if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text)) throw new Error("Некорректное число. Пример: 1.25, −0.5 или 2e-3 (минус — обычный знак -).");
+      return checkedNumber(Number(text));
+    }
+
+    function calculateProject(project, exact = false, plan = buildDependencyGraph(project.variables)) {
+      const cells = project.rows.map(() => Object.create(null));
+      const aggregateCache = new Map();
+      const failure = error => ({ value: null, error: error.message || String(error) });
+      // Сначала ввод и известные ошибки, затем каждый столбец целиком.
+      for (const variable of project.variables) {
+        project.rows.forEach((row, index) => {
+          if (plan.errors.has(variable.name)) cells[index][variable.name] = failure(plan.errors.get(variable.name));
+          else if (variable.type === "input") {
+            try {
+              const number = parseInput(row[variable.name]);
+              cells[index][variable.name] = { value: number == null ? null : exact ? number : applyRounding(number, variable.format), error: null };
+            } catch (error) { cells[index][variable.name] = failure(error); }
+          }
+        });
+      }
+      function variableValue(name, rowIndex) {
+        if (!plan.byName.has(name)) throw new Error(`Неизвестная переменная «${name}».`);
+        const cell = cells[rowIndex][name];
+        if (!cell) throw new Error(`Не удалось вычислить «${name}»: проверьте зависимости.`);
+        if (cell.error) throw new Error(`В «${name}»: ${cell.error}`);
+        if (cell.value == null) throw new Error(`Нет значения «${name}» в строке ${rowIndex + 1}.`);
+        return cell.value;
+      }
+      function aggregate(name, column) {
+        const key = `${name}:${column}`;
+        if (aggregateCache.has(key)) return aggregateCache.get(key);
+        const values = [];
+        cells.forEach((row, index) => {
+          const cell = row[column];
+          if (!cell) throw new Error(`Столбец «${column}» ещё не рассчитан.`);
+          if (cell.error) throw new Error(`В ${name}(${column}), строка ${index + 1}: ${cell.error}`);
+          if (cell.value != null) values.push(cell.value);
+        });
+        const value = aggregateValues(name, values);
+        aggregateCache.set(key, value);
+        return value;
+      }
+      for (const name of plan.order) {
+        const variable = plan.byName.get(name);
+        if (variable.type !== "formula" || plan.errors.has(name)) continue;
+        project.rows.forEach((row, index) => {
+          try {
+            const value = evaluateExpression(plan.asts.get(name), { variable: dependency => variableValue(dependency, index), aggregate });
+            // Ключевое правило: записывается уже округлённое ЧИСЛО, не строка.
+            cells[index][name] = { value: exact ? value : applyRounding(value, variable.format), error: null };
+          } catch (error) { cells[index][name] = failure(error); }
+        });
+      }
+      return { cells, plan };
+    }
+
+    // 4) Модель данных и localStorage
+    const storageKeys = { auto: "laboratory-formula-calculator.auto.v1", saved: "laboratory-formula-calculator.saved.v1" };
+    const $ = id => document.getElementById(id);
+    const cloneProject = project => JSON.parse(JSON.stringify(project));
+
+    function validateVariableName(name, variables, exceptName = null) {
+      if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new Error("Имя: латинские буквы, цифры и подчёркивание; нельзя начинать с цифры.");
+      if (name.length > 64) throw new Error("Имя переменной не длиннее 64 символов.");
+      if (reservedNames.has(name)) throw new Error(`Имя «${name}» зарезервировано. Выберите другое имя.`);
+      if (variables.some(variable => variable.name === name && variable.name !== exceptName)) throw new Error(`Переменная «${name}» уже существует.`);
+    }
+
+    function validateProject(project) {
+      if (!project || typeof project !== "object" || !Array.isArray(project.variables) || !Array.isArray(project.rows)) throw new Error("Неверная структура проекта.");
+      if (project.variables.length > 200 || project.rows.length > 10000) throw new Error("Проект слишком большой (до 200 столбцов и 10 000 строк).");
+      const names = new Set();
+      for (const variable of project.variables) {
+        validateVariableName(variable.name, []);
+        if (names.has(variable.name)) throw new Error(`Повторяется имя «${variable.name}».`);
+        names.add(variable.name);
+        if (!["input", "formula"].includes(variable.type)) throw new Error(`Неизвестный тип столбца «${variable.name}».`);
+        if (variable.type === "formula" && typeof variable.expr !== "string") throw new Error(`У «${variable.name}» отсутствует формула.`);
+        validateFormat(variable.format);
+      }
+      if (project.rows.some(row => !row || typeof row !== "object" || Array.isArray(row))) throw new Error("Строки проекта должны быть объектами.");
+      return {
+        title: String(project.title || "Новая лабораторная").slice(0, 180),
+        variables: project.variables.map(variable => ({ name: variable.name, type: variable.type, expr: variable.expr || "", format: variable.format ? { mode: variable.format.mode, digits: variable.format.digits } : null, trimZeros: Boolean(variable.trimZeros) })),
+        rows: project.rows.map(row => Object.fromEntries(project.variables.filter(variable => variable.type === "input").map(variable => [variable.name, row[variable.name] ?? ""]))),
+        settings: { csvDelimiter: project.settings?.csvDelimiter === "," ? "," : ";" }
+      };
+    }
+
+    function storageWrite(key) {
+      try {
+        localStorage.setItem(key, JSON.stringify({ version: 1, savedAt: new Date().toISOString(), project: state.project }));
+        state.storageAvailable = true;
+        updateSaveStatus();
+        return true;
+      } catch (error) {
+        state.storageAvailable = false;
+        updateSaveStatus();
+        return false;
+      }
+    }
+
+    function storageRead(key) {
+      const text = localStorage.getItem(key);
+      if (!text) return null;
+      const data = JSON.parse(text);
+      if (data.version !== 1) throw new Error("Эта версия сохранения не поддерживается.");
+      return validateProject(data.project);
+    }
+
+    function updateSaveStatus(pending = false) {
+      $("save-status").classList.toggle("failed", !state.storageAvailable);
+      $("save-status-text").textContent = !state.storageAvailable ? "Автосохранение недоступно" : pending ? "Сохранение…" : "Автосохранение включено";
+      $("save-status").title = state.storageAvailable ? "Изменения сохраняются автоматически в этом браузере" : "Браузер запретил localStorage или закончилось место. Разрешите локальное хранилище; пока не закрывайте вкладку.";
+    }
+
+    function replaceProject(project, message, allowUndo = true) {
+      clearTimeout(state.timers.calculation);
+      state.timers.calculation = null;
+      state.undoProject = allowUndo && state.project ? cloneProject(state.project) : null;
+      state.project = validateProject(project);
+      state.view.exact = false;
+      state.view.selectedRows.clear();
+      $("project-title").value = state.project.title;
+      $("csv-delimiter").value = state.project.settings.csvDelimiter;
+      recalculate(true);
+      storageWrite(storageKeys.auto);
+      if (message) showToast(message, Boolean(state.undoProject));
+    }
+
+    function csvEscape(text, delimiter) {
+      const value = String(text);
+      return value.includes(delimiter) || /["\r\n]/.test(value) ? '"' + value.replace(/"/g, '""') + '"' : value;
+    }
+
+    function makeCSV(project, result = calculateProject(project)) {
+      const delimiter = project.settings.csvDelimiter === "," ? "," : ";";
+      const matrix = [project.variables.map(variable => variable.name)];
+      project.rows.forEach((row, index) => {
+        matrix.push(project.variables.map(variable => {
+          const cell = result.cells[index][variable.name];
+          return cell.error ? "#ОШИБКА" : formatValue(cell.value, variable, false);
+        }));
+      });
+      return "\uFEFF" + matrix.map(row => row.map(value => csvEscape(value, delimiter)).join(delimiter)).join("\r\n") + "\r\n";
+    }
+
+    function exportCSV() {
+      flushChanges();
+      if (!state.project.variables.length) { showToast("Сначала добавьте столбцы."); return; }
+      const blob = new Blob([makeCSV(state.project, state.rounded)], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = (state.project.title.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_").trim().slice(0, 120) || "laboratory") + ".csv";
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("CSV экспортирован: округлённые значения для отчёта.");
+    }
+
+    // 5) Рендер таблицы
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, symbol => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[symbol]));
+    }
+
+    function renderTable() {
+      const variables = state.project.variables;
+      $("data-table").querySelector("thead").innerHTML = `<tr><th class="row-number"><input id="select-all" type="checkbox" aria-label="Выбрать все строки"></th>${variables.map((variable, index) => `<th scope="col" class="${variable.format ? "locked" : ""}"><button class="column-heading" type="button" data-edit-column="${index}" aria-label="Настройки столбца ${escapeHTML(variable.name)}"><span><span class="column-name">${escapeHTML(variable.name)}</span><span class="column-meta">${variable.type === "input" ? "Ввод" : "Формула"}${variable.format ? ` · ${variable.format.digits} ${variable.format.mode === "decimals" ? "зн." : "знач."}` : ""}</span></span><span class="column-mark" aria-hidden="true">${variable.format ? "🔒" : "⌄"}</span></button></th>`).join("")}</tr>`;
+      $("data-table").querySelector("tbody").innerHTML = state.project.rows.length
+        ? state.project.rows.map((row, rowIndex) => `<tr data-row="${rowIndex}"><td class="row-number"><label><input type="checkbox" data-select-row="${rowIndex}" aria-label="Выбрать строку ${rowIndex + 1}"><span>${rowIndex + 1}</span></label></td>${variables.map((variable, columnIndex) => `<td data-cell="${rowIndex}:${columnIndex}" class="${variable.format ? "locked" : ""}">${variable.type === "input" ? `<input class="cell-input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-input-row="${rowIndex}" data-input-column="${columnIndex}" aria-label="${escapeHTML(variable.name)}, строка ${rowIndex + 1}" placeholder="—"><span class="input-error" hidden>#ОШИБКА</span>` : '<span class="cell-output"></span>'}</td>`).join("")}</tr>`).join("")
+        : `<tr><td class="empty-cell" colspan="${variables.length + 1}">Пока нет строк. Нажмите «Добавить строку» и введите измерения.</td></tr>`;
+      updateTableValues();
+      updateSelection();
+    }
+
+    function updateTableValues() {
+      const result = state.view.exact ? state.exact : state.rounded;
+      const variables = state.project.variables;
+      $("data-table").querySelectorAll("td[data-cell]").forEach(td => {
+        const [rowIndex, columnIndex] = td.dataset.cell.split(":").map(Number);
+        const variable = variables[columnIndex];
+        const cell = result.cells[rowIndex][variable.name];
+        td.classList.toggle("has-error", Boolean(cell.error));
+        td.title = cell.error || (variable.format && !state.view.exact ? `🔒 Зафиксировано: ${formatValue(cell.value, variable)}. Следующие формулы используют это число.` : "");
+        const input = td.querySelector("input");
+        if (input) {
+          if (document.activeElement !== input) input.value = cell.error ? String(state.project.rows[rowIndex][variable.name] ?? "") : formatValue(cell.value, variable, state.view.exact);
+          input.setAttribute("aria-invalid", cell.error ? "true" : "false");
+          input.title = cell.error || "Нажмите для редактирования исходного значения";
+          td.querySelector(".input-error").hidden = !cell.error;
+        } else {
+          const output = td.querySelector(".cell-output");
+          output.className = "cell-output" + (cell.error ? " cell-error" : cell.value == null ? " missing" : "");
+          output.textContent = cell.error ? "#ОШИБКА" : cell.value == null ? "—" : formatValue(cell.value, variable, state.view.exact);
+          output.title = cell.error || "";
+        }
+      });
+      $("dimension-count").textContent = `${state.project.rows.length} × ${variables.length}`;
+    }
+
+    function updateSelection() {
+      const selected = state.view.selectedRows;
+      $("data-table").querySelectorAll("[data-select-row]").forEach(input => {
+        input.checked = selected.has(Number(input.dataset.selectRow));
+        input.closest("tr").classList.toggle("selected", input.checked);
+      });
+      const all = $("select-all");
+      all.checked = state.project.rows.length > 0 && selected.size === state.project.rows.length;
+      all.indeterminate = selected.size > 0 && !all.checked;
+      all.disabled = !state.project.rows.length;
+      $("delete-rows-btn").disabled = !selected.size;
+      $("selection-count").textContent = selected.size ? `Выбрано строк: ${selected.size}` : "Строки не выбраны";
+    }
+
+    // 6) Рендер панели формул
+    const lockSVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>';
+    const eyeSVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+    const editSVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-12 12-6 1 1-6L16 3Zm-2 2 5 5"/></svg>';
+
+    function renderFormulaPanel() {
+      const result = state.view.exact ? state.exact : state.rounded;
+      const plan = result.plan;
+      const ordered = [...plan.order, ...plan.cyclic].map(name => plan.byName.get(name)).filter(variable => variable.type === "formula");
+      const rowIndex = state.view.selectedRows.size ? Math.min(...state.view.selectedRows) : 0;
+      $("formula-count").textContent = ordered.length;
+      $("formula-context").textContent = state.project.rows.length ? `Значения для строки ${rowIndex + 1} · выберите другую строку слева` : "Добавьте строку для просмотра значений";
+      $("formula-list").innerHTML = ordered.length ? ordered.map((variable, index) => {
+        const cell = result.cells[rowIndex]?.[variable.name];
+        const error = plan.errors.get(variable.name) || cell?.error;
+        const variableIndex = state.project.variables.indexOf(variable);
+        return `<div class="formula-item"><div class="formula-top"><span class="order-number">${plan.cyclic.includes(variable.name) ? "!" : index + 1}</span><code class="formula-code"><b>${escapeHTML(variable.name)}</b> = ${escapeHTML(variable.expr)}</code><button class="ghost icon" type="button" data-edit-column="${variableIndex}" aria-label="Редактировать формулу ${escapeHTML(variable.name)}">${editSVG}</button></div><div class="formula-meta"><span class="lock" aria-label="${variable.format ? "Значение фиксируется" : "Без фиксации"}">${variable.format ? "🔒" : "○"}</span><span>[${escapeHTML(formatDescription(variable))}]${state.view.exact && variable.format ? " · просмотр без фиксации" : ""}</span></div>${error ? `<p class="formula-error">${escapeHTML(error)}</p>` : `<div class="formula-value"><span>Результат${plan.asts.get(variable.name)?.kind === "aggregate" ? " · все строки" : ""}</span><output>${cell ? escapeHTML(formatValue(cell.value, variable, state.view.exact)) : "—"}</output></div>`}</div>`;
+      }).join("") : '<p class="sidebar-note" style="padding:20px 0">Добавьте столбец типа «Формула». Здесь появится порядок вычислений.</p>';
+      $("exact-btn").innerHTML = state.view.exact ? lockSVG + "Вернуться к округлению" : eyeSVG + "Показать точный расчёт";
+      $("exact-btn").classList.toggle("active", state.view.exact);
+      $("exact-btn").setAttribute("aria-pressed", String(state.view.exact));
+      $("mode-banner").classList.toggle("exact", state.view.exact);
+      $("mode-heading").innerHTML = state.view.exact ? eyeSVG + "Точный просмотр" : lockSVG + "Округление включено";
+      $("mode-description").textContent = state.view.exact ? "Фиксация временно отключена. Эти значения — только для сравнения; CSV остаётся округлённым." : "Каждый результат фиксируется в заданном формате. Следующая формула получает уже округлённое число.";
+      $("mode-tag").textContent = state.view.exact ? "НЕ ДЛЯ ОТЧЁТА" : "ДЛЯ ОТЧЁТА";
+    }
+
+    function renderErrors() {
+      const result = state.view.exact ? state.exact : state.rounded;
+      const messages = new Set(result.plan.errors.values());
+      let errorCount = 0;
+      result.cells.forEach(row => Object.values(row).forEach(cell => { if (cell.error) { errorCount += 1; messages.add(cell.error); } }));
+      const summary = $("error-summary");
+      summary.hidden = !messages.size;
+      summary.innerHTML = [...messages].slice(0, 3).map(message => `<p>${escapeHTML(message)}</p>`).join("") + (messages.size > 3 ? `<p>И ещё ${messages.size - 3}. Подробности — в подсказках ячеек.</p>` : "");
+      $("calculation-status").textContent = errorCount ? `Расчёт завершён · ячеек с ошибками: ${errorCount}` : messages.size ? "Проверьте формулы" : `Расчёт готов · строк: ${state.project.rows.length}`;
+    }
+
+    function recalculate(structural = false) {
+      const plan = buildDependencyGraph(state.project.variables);
+      state.rounded = calculateProject(state.project, false, plan);
+      state.exact = calculateProject(state.project, true, plan);
+      if (structural) renderTable(); else updateTableValues();
+      renderFormulaPanel();
+      renderErrors();
+    }
+
+    function scheduleChanges() {
+      clearTimeout(state.timers.calculation);
+      updateSaveStatus(true);
+      state.timers.calculation = setTimeout(() => {
+        state.timers.calculation = null;
+        recalculate();
+        storageWrite(storageKeys.auto);
+      }, 150);
+    }
+
+    function flushChanges() {
+      clearTimeout(state.timers.calculation);
+      state.timers.calculation = null;
+      recalculate();
+      storageWrite(storageKeys.auto);
+    }
+
+    // 7) Обработчики событий
+    function showToast(message, undo = false) {
+      clearTimeout(state.timers.toast);
+      $("toast-message").textContent = message;
+      $("undo-btn").hidden = !undo;
+      $("toast").hidden = false;
+      state.timers.toast = setTimeout(() => { $("toast").hidden = true; }, undo ? 12000 : 4500);
+    }
+
+    function openColumnDialog(index = null, anchor = null) {
+      flushChanges();
+      state.view.editingColumn = index;
+      const variable = index == null ? { name: "", type: "formula", expr: "", format: { mode: "decimals", digits: 3 }, trimZeros: false } : state.project.variables[index];
+      $("column-dialog-title").textContent = index == null ? "Добавить столбец" : `Столбец ${variable.name}`;
+      $("column-name").value = variable.name;
+      $("column-type").value = variable.type;
+      $("column-expr").value = variable.expr;
+      $("column-mode").value = variable.format?.mode || "none";
+      $("column-digits").value = variable.format?.digits ?? 3;
+      $("column-trim").checked = variable.trimZeros;
+      $("column-error").hidden = true;
+      $("delete-column-btn").hidden = index == null;
+      updateColumnFields();
+      const dialog = $("column-dialog");
+      // На широком экране диалог находится рядом с заголовком, на телефоне — по центру.
+      dialog.style.margin = "auto";
+      dialog.style.top = "";
+      dialog.style.left = "";
+      if (anchor && window.innerWidth > 850) {
+        const rect = anchor.getBoundingClientRect();
+        dialog.style.margin = "0";
+        dialog.style.left = `${Math.max(12, Math.min(rect.left, window.innerWidth - 450))}px`;
+        dialog.style.top = `${Math.max(12, Math.min(rect.bottom + 7, window.innerHeight - 660))}px`;
+      }
+      dialog.showModal();
+      $("column-name").focus();
+    }
+
+    function updateColumnFields() {
+      $("expression-field").hidden = $("column-type").value !== "formula";
+      const mode = $("column-mode").value;
+      $("column-digits").disabled = mode === "none";
+      $("column-digits").min = mode === "sigfigs" ? "1" : "0";
+      $("column-trim").disabled = mode === "none";
+      $("rounding-note").textContent = mode === "none" ? "Формат не задан. Значение используется с полной доступной точностью." : "🔒 Результат будет округлён и зафиксирован. Следующие формулы используют именно это число.";
+    }
+
+    function renameInExpression(expression, oldName, newName) {
+      try {
+        const matches = tokenize(expression).filter(token => token.type === "name" && token.value === oldName);
+        let renamed = expression;
+        for (const token of matches.reverse()) renamed = renamed.slice(0, token.start) + newName + renamed.slice(token.end);
+        return renamed;
+      } catch (error) {
+        // Даже незавершённая формула сохраняется. Не меняем числовые экспоненты.
+        return expression.replace(/[A-Za-z_][A-Za-z0-9_]*|(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/g, token => token === oldName ? newName : token);
+      }
+    }
+
+    function applyColumn(event) {
+      event.preventDefault();
+      const index = state.view.editingColumn;
+      const oldVariable = index == null ? null : state.project.variables[index];
+      try {
+        const name = $("column-name").value.trim();
+        validateVariableName(name, state.project.variables, oldVariable?.name);
+        const type = $("column-type").value;
+        const expr = type === "formula" ? $("column-expr").value.trim() : "";
+        // Синтаксис проверяем здесь; неизвестные зависимости и циклы видны в таблице.
+        if (type === "formula") parseExpression(expr);
+        const mode = $("column-mode").value;
+        if (mode !== "none" && $("column-digits").value.trim() === "") throw new Error("Укажите число знаков округления.");
+        const format = mode === "none" ? null : { mode, digits: Number($("column-digits").value) };
+        validateFormat(format);
+        if (index == null && state.project.variables.length >= 200) throw new Error("Достигнут предел: 200 столбцов.");
+        const variable = { name, type, expr, format, trimZeros: $("column-trim").checked };
+        state.undoProject = cloneProject(state.project);
+        if (index == null) state.project.variables.push(variable); else state.project.variables[index] = variable;
+        if (oldVariable && oldVariable.name !== name) {
+          state.project.variables.forEach(item => { if (item.type === "formula") item.expr = renameInExpression(item.expr, oldVariable.name, name); });
+          state.project.rows.forEach(row => { if (Object.hasOwn(row, oldVariable.name)) { row[name] = row[oldVariable.name]; delete row[oldVariable.name]; } });
+        }
+        state.project.rows.forEach(row => {
+          if (type === "formula") delete row[name];
+          else if (!oldVariable || oldVariable.type !== "input") row[name] = "";
+        });
+        $("column-dialog").close();
+        recalculate(true);
+        storageWrite(storageKeys.auto);
+        showToast(index == null ? `Столбец ${name} добавлен.` : `Столбец ${name} обновлён.`, true);
+      } catch (error) {
+        $("column-error").textContent = error.message;
+        $("column-error").hidden = false;
+      }
+    }
+
+    function deleteColumn() {
+      const index = state.view.editingColumn;
+      if (index == null) return;
+      state.undoProject = cloneProject(state.project);
+      const [variable] = state.project.variables.splice(index, 1);
+      state.project.rows.forEach(row => { delete row[variable.name]; });
+      $("column-dialog").close();
+      recalculate(true);
+      storageWrite(storageKeys.auto);
+      showToast(`Столбец ${variable.name} удалён. Зависимые формулы можно исправить.`, true);
+    }
+
+    function addRow() {
+      flushChanges();
+      if (state.project.rows.length >= 10000) { showToast("Достигнут предел: 10 000 строк."); return; }
+      state.project.rows.push(Object.fromEntries(state.project.variables.filter(variable => variable.type === "input").map(variable => [variable.name, ""])));
+      recalculate(true);
+      storageWrite(storageKeys.auto);
+      const scroll = $("table-scroll");
+      scroll.scrollTop = scroll.scrollHeight;
+      const firstInput = $("data-table").querySelector(`input[data-input-row="${state.project.rows.length - 1}"]`);
+      firstInput?.focus({ preventScroll: true });
+    }
+
+    function deleteRows() {
+      if (!state.view.selectedRows.size) return;
+      clearTimeout(state.timers.calculation);
+      state.timers.calculation = null;
+      state.undoProject = cloneProject(state.project);
+      const count = state.view.selectedRows.size;
+      state.project.rows = state.project.rows.filter((row, index) => !state.view.selectedRows.has(index));
+      state.view.selectedRows.clear();
+      recalculate(true);
+      storageWrite(storageKeys.auto);
+      showToast(`Удалено строк: ${count}.`, true);
+    }
+
+    function attachEvents() {
+      $("project-title").addEventListener("input", event => { state.project.title = event.target.value; scheduleChanges(); });
+      $("csv-delimiter").addEventListener("change", event => { state.project.settings.csvDelimiter = event.target.value; storageWrite(storageKeys.auto); });
+      $("save-btn").addEventListener("click", () => {
+        flushChanges();
+        showToast(storageWrite(storageKeys.saved) ? "Контрольная копия сохранена в этом браузере." : "Не удалось сохранить: localStorage недоступен или заполнен.");
+      });
+      $("load-btn").addEventListener("click", () => {
+        try {
+          const saved = storageRead(storageKeys.saved) || storageRead(storageKeys.auto);
+          if (!saved) { showToast("Пока нет сохранённого проекта."); return; }
+          replaceProject(saved, "Сохранённый проект загружен.");
+        } catch (error) { showToast(`Не удалось загрузить проект: ${error.message}`); }
+      });
+      $("new-btn").addEventListener("click", () => replaceProject(createEmptyProject(), "Создан новый проект. Предыдущий можно вернуть."));
+      $("demo-btn").addEventListener("click", () => replaceProject(createDemoProject(), "Загружен пример: равноускоренное движение."));
+      $("export-btn").addEventListener("click", exportCSV);
+      $("add-column-btn").addEventListener("click", () => openColumnDialog());
+      $("add-row-btn").addEventListener("click", addRow);
+      $("delete-rows-btn").addEventListener("click", deleteRows);
+      $("recalculate-btn").addEventListener("click", () => { flushChanges(); showToast("Все формулы пересчитаны."); });
+      $("exact-btn").addEventListener("click", () => {
+        flushChanges();
+        state.view.exact = !state.view.exact;
+        updateTableValues(); renderFormulaPanel(); renderErrors();
+      });
+      document.addEventListener("click", event => {
+        const button = event.target.closest("[data-edit-column]");
+        if (button) openColumnDialog(Number(button.dataset.editColumn), button);
+      });
+      $("data-table").addEventListener("input", event => {
+        const input = event.target.closest("[data-input-row]");
+        if (!input) return;
+        const variable = state.project.variables[Number(input.dataset.inputColumn)];
+        state.project.rows[Number(input.dataset.inputRow)][variable.name] = input.value;
+        scheduleChanges();
+      });
+      $("data-table").addEventListener("focusin", event => {
+        const input = event.target.closest("[data-input-row]");
+        if (!input) return;
+        const variable = state.project.variables[Number(input.dataset.inputColumn)];
+        input.value = String(state.project.rows[Number(input.dataset.inputRow)][variable.name] ?? "");
+      });
+      $("data-table").addEventListener("focusout", event => {
+        if (event.target.matches("[data-input-row]")) setTimeout(() => { if (state.project) updateTableValues(); }, 0);
+      });
+      $("data-table").addEventListener("keydown", event => {
+        if (event.target.matches("[data-input-row]") && event.key === "Enter") { event.preventDefault(); event.target.blur(); flushChanges(); }
+      });
+      $("data-table").addEventListener("change", event => {
+        if (event.target.id === "select-all") {
+          state.view.selectedRows = event.target.checked ? new Set(state.project.rows.map((row, index) => index)) : new Set();
+        } else if (event.target.matches("[data-select-row]")) {
+          const index = Number(event.target.dataset.selectRow);
+          if (event.target.checked) state.view.selectedRows.add(index); else state.view.selectedRows.delete(index);
+        } else return;
+        updateSelection(); renderFormulaPanel();
+      });
+      $("column-form").addEventListener("submit", applyColumn);
+      $("column-type").addEventListener("change", updateColumnFields);
+      $("column-mode").addEventListener("change", updateColumnFields);
+      $("delete-column-btn").addEventListener("click", deleteColumn);
+      ["close-column-btn", "cancel-column-btn"].forEach(id => $(id).addEventListener("click", () => $("column-dialog").close()));
+      $("column-dialog").addEventListener("click", event => {
+        if (event.target !== $("column-dialog")) return;
+        const bounds = event.target.getBoundingClientRect();
+        if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) event.target.close();
+      });
+      $("undo-btn").addEventListener("click", () => {
+        if (!state.undoProject) return;
+        const previous = state.undoProject;
+        replaceProject(previous, "Предыдущее состояние восстановлено.", false);
+      });
+      document.addEventListener("click", event => { if (!$("settings").contains(event.target)) $("settings").open = false; });
+      window.addEventListener("beforeunload", () => { if (state.project) storageWrite(storageKeys.auto); });
+      document.addEventListener("visibilitychange", () => { if (document.hidden && state.project) storageWrite(storageKeys.auto); });
+    }
+
+    // 8) Инициализация и демо-проект
+    function createEmptyProject() {
+      return { title: "Новая лабораторная", variables: [{ name: "x", type: "input", expr: "", format: null, trimZeros: false }], rows: [{ x: "" }], settings: { csvDelimiter: ";" } };
+    }
+
+    function createDemoProject() {
+      const input = name => ({ name, type: "input", expr: "", format: null, trimZeros: false });
+      const formula = (name, expr) => ({ name, type: "formula", expr, format: { mode: "decimals", digits: 3 }, trimZeros: false });
+      return {
+        title: "Равноускоренное движение",
+        variables: [input("s"), input("t1"), input("t2"), input("t3"), input("m"), formula("t_avg", "(t1 + t2 + t3) / 3"), formula("v", "s / t_avg"), formula("E", "m * v^2 / 2"), formula("v_mean", "mean(v)")],
+        rows: [
+          { s: 1.5, t1: 1.231, t2: 1.232, t3: 1.234, m: 0.2 },
+          { s: 1.8, t1: 1.352, t2: 1.349, t3: 1.354, m: 0.2 },
+          { s: 2.1, t1: 1.463, t2: 1.467, t3: 1.462, m: 0.2 },
+          { s: 2.4, t1: 1.569, t2: 1.572, t3: 1.568, m: 0.2 },
+          { s: 2.7, t1: 1.661, t2: 1.665, t3: 1.662, m: 0.2 },
+          { s: 3, t1: 1.754, t2: 1.751, t3: 1.755, m: 0.2 }
+        ],
+        settings: { csvDelimiter: ";" }
+      };
+    }
+
+    function initialize() {
+      attachEvents();
+      let project = null;
+      let loadError = "";
+      // Если автокопия повреждена, пробуем контрольную копию, не стирая её.
+      for (const key of [storageKeys.auto, storageKeys.saved]) {
+        try { project = storageRead(key); if (project) break; }
+        catch (error) { loadError = `Не удалось прочитать сохранение: ${error.message}`; }
+      }
+      replaceProject(project || createDemoProject(), "", false);
+      if (loadError) showToast(loadError);
+    }
+
+    // Открытый API внутри единственного state позволяет проверить ядро без DOM.
+    state.api = Object.freeze({ parseExpression, evaluateExpression, applyRounding, formatValue, buildDependencyGraph, calculateProject, aggregateValues, makeCSV, validateProject, validateVariableName, renameInExpression, createDemoProject, createEmptyProject });
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize, { once: true });
+    else initialize();
+
+    // BEGIN: масштаб таблицы и именованные сохранения (отдельные дополнения)
+    // Новые настройки и слоты не входят в state и в формат проекта.
+    const tableScaleStorageKey = "physcalc_table_scale";
+    const namedProjectPrefix = "physcalc_saved_";
+    let tableScalePercent = 100;
+
+    function applyTableScale(percent, persist = true) {
+      tableScalePercent = Math.max(40, Math.min(200, Math.round(percent / 10) * 10));
+      const surface = $("table-scroll");
+      surface.classList.toggle("table-scale-surface", tableScalePercent !== 100);
+      if (tableScalePercent === 100) surface.style.removeProperty("--table-scale");
+      else surface.style.setProperty("--table-scale", String(tableScalePercent / 100));
+      $("table-scale-percent").textContent = `${tableScalePercent}%`;
+      $("table-scale-minus-btn").disabled = tableScalePercent === 40;
+      $("table-scale-plus-btn").disabled = tableScalePercent === 200;
+      if (persist) {
+        try { localStorage.setItem(tableScaleStorageKey, String(tableScalePercent)); }
+        catch (error) { showToast("Масштаб изменён, но браузер не разрешил сохранить его."); }
+      }
+    }
+
+    function restoreTableScale() {
+      let percent = 100;
+      try {
+        const saved = Number(localStorage.getItem(tableScaleStorageKey));
+        if (Number.isInteger(saved) && saved >= 40 && saved <= 200 && saved % 10 === 0) percent = saved;
+      } catch (error) { /* При недоступном хранилище остаётся 100%. */ }
+      applyTableScale(percent, false);
+    }
+
+    function saveNamedProject() {
+      const answer = window.prompt("Имя сохранения проекта:", state.project.title || "Новый проект");
+      if (answer === null) return;
+      const name = answer.trim();
+      if (!name) { showToast("Введите непустое имя сохранения."); return; }
+      flushChanges();
+      try {
+        let timestamp = Date.now();
+        // Два быстрых сохранения не должны перезаписать друг друга.
+        while (localStorage.getItem(namedProjectPrefix + timestamp) !== null) timestamp += 1;
+        const slot = { name, savedAt: new Date().toISOString(), project: cloneProject(state.project) };
+        localStorage.setItem(namedProjectPrefix + timestamp, JSON.stringify(slot));
+        showToast(`Проект «${name}» сохранён отдельным слотом.`);
+      } catch (error) { showToast(`Не удалось сохранить проект: ${error.message}`); }
+    }
+
+    function readNamedProjects() {
+      const slots = [];
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (!key || !/^physcalc_saved_\d+$/.test(key)) continue;
+        try {
+          const slot = JSON.parse(localStorage.getItem(key));
+          if (!slot || typeof slot.name !== "string" || !slot.project) throw new Error("Неверный слот.");
+          const time = Date.parse(slot.savedAt);
+          slots.push({ key, name: slot.name, savedAt: slot.savedAt, time: Number.isFinite(time) ? time : 0, invalid: false });
+        } catch (error) {
+          // Повреждённый слот можно удалить, не затрагивая остальные проекты.
+          slots.push({ key, name: "Повреждённое сохранение", time: 0, invalid: true });
+        }
+      }
+      return slots.sort((first, second) => second.time - first.time || Number(second.key.slice(namedProjectPrefix.length)) - Number(first.key.slice(namedProjectPrefix.length)));
+    }
+
+    function renderNamedProjects() {
+      const slots = readNamedProjects();
+      $("named-projects-list").innerHTML = slots.length ? slots.map(slot => {
+        const date = slot.time ? new Date(slot.time).toLocaleString("ru-RU") : "Дата неизвестна";
+        return `<div class="named-project-row"><div class="named-project-info"><strong>${escapeHTML(slot.name)}</strong><span class="named-project-date">${escapeHTML(date)}</span></div><div class="named-project-actions"><button class="small" type="button" data-open-named="${slot.key}"${slot.invalid ? " disabled" : ""}>Открыть</button><button class="small danger" type="button" data-delete-named="${slot.key}">Удалить</button></div></div>`;
+      }).join("") : '<p class="named-projects-empty">Нет сохранённых проектов</p>';
+    }
+
+    function showNamedProjects() {
+      try {
+        renderNamedProjects();
+        $("named-projects-dialog").showModal();
+      } catch (error) { showToast(`Не удалось открыть список сохранений: ${error.message}`); }
+    }
+
+    function openNamedProject(key) {
+      try {
+        const text = localStorage.getItem(key);
+        if (text === null) { renderNamedProjects(); showToast("Это сохранение уже удалено."); return; }
+        const slot = JSON.parse(text);
+        const project = validateProject(slot.project);
+        replaceProject(project, `Открыт проект «${slot.name}».`);
+        $("named-projects-dialog").close();
+      } catch (error) { showToast(`Не удалось открыть проект: ${error.message}`); }
+    }
+
+    function deleteNamedProject(key) {
+      try {
+        let name = "Повреждённое сохранение";
+        try { name = JSON.parse(localStorage.getItem(key))?.name || name; }
+        catch (error) { /* Для повреждённого JSON остаётся поясняющее имя. */ }
+        if (!window.confirm(`Удалить сохранение «${name}»?`)) return;
+        localStorage.removeItem(key);
+        renderNamedProjects();
+        showToast("Именованное сохранение удалено.");
+      } catch (error) { showToast(`Не удалось удалить сохранение: ${error.message}`); }
+    }
+
+    function initializeProjectViewTools() {
+      restoreTableScale();
+      $("table-scale-minus-btn").addEventListener("click", () => applyTableScale(tableScalePercent - 10));
+      $("table-scale-plus-btn").addEventListener("click", () => applyTableScale(tableScalePercent + 10));
+      $("save-as-btn").addEventListener("click", saveNamedProject);
+      $("open-named-btn").addEventListener("click", showNamedProjects);
+      $("close-named-projects-btn").addEventListener("click", () => $("named-projects-dialog").close());
+      $("named-projects-list").addEventListener("click", event => {
+        const openButton = event.target.closest("[data-open-named]");
+        const deleteButton = event.target.closest("[data-delete-named]");
+        if (openButton) openNamedProject(openButton.dataset.openNamed);
+        else if (deleteButton) deleteNamedProject(deleteButton.dataset.deleteNamed);
+      });
+    }
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initializeProjectViewTools, { once: true });
+    else initializeProjectViewTools();
+    // END: масштаб таблицы и именованные сохранения (отдельные дополнения)
+  })();
+  
+    </script>
+    <!-- PWA BEGIN: отдельная регистрация Service Worker; код калькулятора не изменён. -->
+    <script>
+      // Service Worker работает через HTTPS или localhost; file:// остаётся обычным HTML.
+      if ("serviceWorker" in navigator && window.isSecureContext &&
+          (window.location.protocol === "https:" || window.location.protocol === "http:")) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register('sw.js').catch(error => {
+            console.warn("Не удалось зарегистрировать Service Worker:", error);
+          });
+        });
+      }
+    </script>
+    <!-- PWA END: регистрация Service Worker. -->
+  </body>
+</html>
